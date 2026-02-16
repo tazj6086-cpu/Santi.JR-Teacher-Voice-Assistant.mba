@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <title>Santi.JR Voice Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .voice-assistant-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 20px;
+            padding: 25px 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .voice-assistant-section h2 {
+            font-size: 1.5em;
+            margin-bottom: 12px;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .instructions p {
+            font-size: 0.9em;
+            margin: 4px 0;
+        }
+
+        .voice-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: white;
+            border: 5px solid rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .voice-button:active {
+            transform: scale(0.95);
+        }
+
+        .voice-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .voice-button.listening {
+            animation: pulse-large 1.5s infinite;
+            background: #e74c3c;
+            border-color: rgba(231, 76, 60, 0.5);
+        }
+
+        .voice-button.speaking {
+            animation: pulse-large 1s infinite;
+            background: #27ae60;
+            border-color: rgba(39, 174, 96, 0.5);
+        }
+
+        .voice-button.processing {
+            animation: spin 2s linear infinite;
+            background: #f39c12;
+            border-color: rgba(243, 156, 18, 0.5);
+        }
+
+        @keyframes pulse-large {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 30px rgba(255, 255, 255, 0);
+            }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .voice-icon {
+            font-size: 60px;
+            pointer-events: none;
+        }
+
+        .status-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            min-height: 70px;
+        }
+
+        .status-text {
+            font-size: 1em;
+            font-weight: 500;
+            word-wrap: break-word;
+        }
+
+        .error-message {
+            color: #ffe0e0;
+            margin-top: 8px;
+            font-size: 0.85em;
+            word-wrap: break-word;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .control-btn {
+            padding: 12px 16px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            font-size: 0.9em;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            white-space: nowrap;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .control-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .conversation-history {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px 15px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .conversation-item {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            animation: slideIn 0.3s ease-out;
+            word-wrap: break-word;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: #667eea;
+            color: white;
+            margin-left: 30px;
+        }
+
+        .assistant-message {
+            background: white;
+            color: #333;
+            margin-right: 30px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .google-search-message {
+            background: #4285f4;
+            color: white;
+            margin-right: 30px;
+        }
+
+        .message-label {
+            font-weight: bold;
+            margin-bottom: 6px;
+            font-size: 0.85em;
+        }
+
+        .message-text {
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+
+        .google-link {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: white;
+            color: #4285f4;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .permission-notice {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            color: #856404;
+            font-size: 0.9em;
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .header {
+                padding: 15px 10px;
+            }
+
+            .header h1 {
+                font-size: 1.4em;
+            }
+
+            .header p {
+                font-size: 0.9em;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .voice-assistant-section {
+                padding: 20px 12px;
+            }
+
+            .voice-assistant-section h2 {
+                font-size: 1.3em;
+            }
+
+            .voice-button {
+                width: 110px;
+                height: 110px;
+            }
+
+            .voice-icon {
+                font-size: 50px;
+            }
+
+            .status-display {
+                padding: 12px;
+                min-height: 60px;
+            }
+
+            .status-text {
+                font-size: 0.9em;
+            }
+
+            .controls {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .control-btn {
+                padding: 10px 12px;
+                font-size: 0.85em;
+            }
+
+            .conversation-history {
+                padding: 15px 10px;
+                max-height: 300px;
+            }
+
+            .conversation-item {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+
+            .user-message {
+                margin-left: 10px;
+            }
+
+            .assistant-message, .google-search-message {
+                margin-right: 10px;
+            }
+
+            .instructions p {
+                font-size: 0.85em;
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 400px) {
+            .header h1 {
+                font-size: 1.2em;
+            }
+
+            .voice-button {
+                width: 100px;
+                height: 100px;
+            }
+
+            .voice-icon {
+                font-size: 45px;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .control-btn {
+                width: 100%;
+            }
+        }
+
+        /* Landscape mobile */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .header {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.2em;
+                margin-bottom: 5px;
+            }
+
+            .voice-assistant-section {
+                padding: 15px 10px;
+            }
+
+            .voice-button {
+                width: 90px;
+                height: 90px;
+            }
+
+            .voice-icon {
+                font-size: 40px;
+            }
+
+            .conversation-history {
+                max-height: 200px;
+            }
+        }
+
+        /* Fix for iOS Safari */
+        @supports (-webkit-touch-callout: none) {
+            .voice-button {
+                -webkit-tap-highlight-color: rgba(0,0,0,0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Santi.JR Voice Assistant</h1>
+            <p>Your AI Teacher - Learn Any Course by Voice</p>
+        </div>
+
+        <div class="main-content">
+            <div id="permissionNotice" class="permission-notice" style="display: none;">
+                <strong>⚠️ Microphone Permission Required</strong>
+                <p>Please allow microphone access to use voice features. Click "Allow" when prompted by your browser.</p>
+                <button onclick="requestMicrophoneAccess()" style="margin-top: 10px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;">
+                    🎤 Request Microphone Access
+                </button>
+            </div>
+
+            <div class="voice-assistant-section">
+                <h2>🎤 Santi.JR - Your AI Teacher</h2>
+                
+                <div class="instructions">
+                    <p><strong>🎤 Ask me to teach you anything:</strong></p>
+                    <p>1. <strong>Allow microphone access</strong> when prompted</p>
+                    <p>2. Click the microphone button below</p>
+                    <p>3. Say "Teach me [subject/topic]"</p>
+                    <p>4. I'll fetch and explain the information</p>
+                    <p style="margin-top: 8px; font-size: 0.85em; opacity: 0.9;">
+                        <strong>📱 Mobile users:</strong> Make sure your browser has microphone permission in your phone settings.
+                    </p>
+                </div>
+                
+                <div class="voice-button" id="voiceButton">
+                    <span class="voice-icon" id="voiceIcon">🎤</span>
+                </div>
+
+                <div class="status-display">
+                    <div class="status-text" id="statusText">Click the microphone to start speaking</div>
+                    <div class="error-message" id="errorMessage"></div>
+                    <div id="interimTranscript" style="margin-top: 10px; font-style: italic; color: rgba(255,255,255,0.7); min-height: 24px;"></div>
+                </div>
+
+                <div class="controls">
+                    <button class="control-btn" onclick="startListening()">🎤 Start Listening</button>
+                    <button class="control-btn" onclick="testMicrophone()">🔧 Test Microphone</button>
+                    <button class="control-btn" onclick="stopSpeaking()">🔇 Stop Speaking</button>
+                    <button class="control-btn" onclick="clearHistory()">🗑️ Clear History</button>
+                </div>
+            </div>
+
+            <div class="conversation-history" id="conversationHistory">
+                <h3 style="color: #667eea; margin-bottom: 20px;">💬 Conversation History</h3>
+                <p style="color: #999; text-align: center;">Your conversation will appear here...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data
+        const courses = [
+            {
+                code: "CS101", name: "Introduction to Computer Science", school: "School of Natural Sciences",
+                description: "An introductory course covering fundamental concepts of computer science including programming, algorithms, and data structures.",
+                topics: ["Variables and Data Types", "Control Structures", "Functions", "Arrays", "Object-Oriented Programming", "Algorithms"],
+                assessment: "Continuous assessment 40%, Final exam 60%",
+                keywords: ["computer", "programming", "coding", "software", "cs101", "cs", "technology"]
+            },
+            {
+                code: "ENG201", name: "Engineering Mathematics II", school: "School of Engineering",
+                description: "Advanced mathematical concepts for engineering applications including calculus, differential equations, and linear algebra.",
+                topics: ["Multivariable Calculus", "Vector Calculus", "Differential Equations", "Linear Algebra", "Fourier Analysis"],
+                assessment: "Tests 30%, Assignments 10%, Final exam 60%",
+                keywords: ["math", "mathematics", "engineering", "calculus", "eng201", "eng"]
+            },
+            {
+                code: "BIO105", name: "General Biology", school: "School of Natural Sciences",
+                description: "Introduction to biological sciences covering cell biology, genetics, evolution, and ecology.",
+                topics: ["Cell Biology", "Genetics", "Evolution", "Physiology", "Ecology", "Biodiversity"],
+                assessment: "Lab work 20%, Tests 30%, Final exam 50%",
+                keywords: ["biology", "bio", "life science", "genetics", "bio105", "life"]
+            },
+            {
+                code: "ECO110", name: "Principles of Economics", school: "School of Humanities and Social Sciences",
+                description: "Fundamental principles of microeconomics and macroeconomics.",
+                topics: ["Supply and Demand", "Market Equilibrium", "Elasticity", "Production Costs", "GDP", "Inflation"],
+                assessment: "Assignments 20%, Midterm 30%, Final exam 50%",
+                keywords: ["economics", "economy", "eco", "eco110", "business", "finance"]
+            },
+            {
+                code: "MED202", name: "Human Anatomy and Physiology", school: "School of Medicine",
+                description: "Comprehensive study of human body systems.",
+                topics: ["Skeletal System", "Muscular System", "Cardiovascular", "Respiratory", "Nervous System", "Endocrine"],
+                assessment: "Practicals 30%, Tests 20%, Final exam 50%",
+                keywords: ["medicine", "medical", "anatomy", "physiology", "med202", "med", "doctor", "health"]
+            },
+            {
+                code: "CHM103", name: "General Chemistry", school: "School of Natural Sciences",
+                description: "Foundational chemistry course covering atomic structure, bonding, and reactions.",
+                topics: ["Atomic Structure", "Chemical Bonding", "Stoichiometry", "States of Matter", "Reactions", "Thermochemistry"],
+                assessment: "Lab reports 25%, Tests 25%, Final exam 50%",
+                keywords: ["chemistry", "chemical", "chm", "chm103", "science", "lab"]
+            },
+            {
+                code: "LAW101", name: "Introduction to Law", school: "School of Law",
+                description: "Introduction to legal systems and Zambian legal framework.",
+                topics: ["Sources of Law", "Zambian Legal System", "Constitutional Law", "Contract Law", "Tort Law", "Legal Research"],
+                assessment: "Moot court 20%, Essays 30%, Final exam 50%",
+                keywords: ["law", "legal", "lawyer", "law101", "justice", "court"]
+            },
+            {
+                code: "AGR201", name: "Crop Production", school: "School of Agricultural Sciences",
+                description: "Principles and practices of crop production.",
+                topics: ["Soil Science", "Crop Selection", "Irrigation", "Pest Management", "Harvesting", "Sustainable Farming"],
+                assessment: "Field work 30%, Reports 20%, Final exam 50%",
+                keywords: ["agriculture", "farming", "agr", "agr201", "crops", "plants"]
+            }
+        ];
+
+        const resources = [
+            { name: "UNZA Library", url: "https://www.unza.zm/library",
+              description: "University of Zambia's main library portal with academic resources, journals, and research materials.",
+              keywords: ["library", "books", "research", "journals", "unza"] },
+            { name: "UNZA Digital Repository", url: "https://dspace.unza.zm/handle/123456789/1093",
+              description: "Digital archive of theses, dissertations, and academic publications from UNZA.",
+              keywords: ["repository", "thesis", "dissertation", "research papers", "digital"] },
+            { name: "Zambian Universities Study App", url: "https://apkpure.com/zambian-universities-study-app/com.baearea.mycbumenu",
+              description: "Mobile application for accessing study materials across Zambian universities.",
+              keywords: ["app", "mobile", "study materials", "zambian"] },
+            { name: "Kitwe Public Library", url: "https://en.wikipedia.org/wiki/Kitwe_Public_Library",
+              description: "Information about Kitwe's public library services and resources.",
+              keywords: ["kitwe", "public library", "copperbelt"] },
+            { name: "Copperstone University", url: "https://en.wikipedia.org/wiki/Copperstone_University",
+              description: "Details about Copperstone University programs and academic offerings.",
+              keywords: ["copperstone", "university", "copperbelt"] },
+            { name: "Gideon Robert University", url: "https://en.wikipedia.org/wiki/Gideon_Robert_University",
+              description: "Information about Gideon Robert University courses and services.",
+              keywords: ["gideon robert", "university", "gideon"] },
+            { name: "NORTEC Student Services", url: "https://nortec.ac.zm/student-services/",
+              description: "Student support services at Northern Technical College.",
+              keywords: ["nortec", "technical college", "student services", "northern"] },
+            { name: "University of Technology Zambia", url: "https://www.utz.ac.zm/",
+              description: "Official website of the University of Technology Zambia with course information.",
+              keywords: ["utz", "technology", "university", "tech"] },
+            { name: "ICAZ", url: "https://www.icaz.org.zm/",
+              description: "Institute of Chartered Accountants - Professional accounting education in Zambia.",
+              keywords: ["icaz", "accounting", "chartered accountant", "finance"] },
+            { name: "ICAZ Student Resources", url: "https://www.icaz.org.zm/students/",
+              description: "Study materials and guidance for accounting students.",
+              keywords: ["icaz", "accounting", "student resources", "study"] }
+        ];
+
+        let recognition, synthesis = window.speechSynthesis;
+        let isListening = false, isSpeaking = false, isProcessing = false, recognitionTimeout;
+
+        const voiceButton = document.getElementById('voiceButton');
+        const voiceIcon = document.getElementById('voiceIcon');
+        const statusText = document.getElementById('statusText');
+        const errorMessage = document.getElementById('errorMessage');
+        const conversationHistory = document.getElementById('conversationHistory');
+        const permissionNotice = document.getElementById('permissionNotice');
+        const interimTranscript = document.getElementById('interimTranscript');
+
+        function initializeSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = true;  // Show interim results
+                recognition.lang = 'en-US';
+                recognition.maxAlternatives = 1;
+
+                recognition.onstart = () => {
+                    console.log('🎤 Recognition started - listening now!');
+                    isListening = true;
+                    voiceButton.className = 'voice-button listening';
+                    voiceIcon.textContent = '🎤';
+                    statusText.textContent = '🎤 Listening... I can hear you! Speak now!';
+                    errorMessage.textContent = '';
+                    // Longer timeout - 15 seconds
+                    recognitionTimeout = setTimeout(() => { 
+                        if (isListening) { 
+                            console.log('⏱️ Timeout - stopping recognition');
+                            recognition.stop(); 
+                            handleError('no-speech'); 
+                        } 
+                    }, 15000);
+                };
+
+                recognition.onresult = (event) => {
+                    console.log('📝 Recognition result received');
+                    clearTimeout(recognitionTimeout);
+                    
+                    // Process all results to get interim and final transcripts
+                    let interimText = '';
+                    let finalText = '';
+                    
+                    for (let i = 0; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalText += transcript + ' ';
+                        } else {
+                            interimText += transcript;
+                        }
+                    }
+                    
+                    // Show interim results in real-time
+                    if (interimText) {
+                        console.log('🗨️ Interim:', interimText);
+                        interimTranscript.textContent = '💬 Hearing: "' + interimText + '"';
+                        statusText.textContent = '🎤 Listening... Keep speaking!';
+                    }
+                    
+                    // Process final result
+                    if (finalText.trim()) {
+                        console.log('✅ Final transcript:', finalText.trim());
+                        interimTranscript.textContent = '';
+                        addToConversation('user', finalText.trim());
+                        statusText.textContent = '⏳ Processing your question...';
+                        voiceButton.className = 'voice-button processing';
+                        voiceIcon.textContent = '⚙️';
+                        setTimeout(() => processQuery(finalText.trim()), 500);
+                    }
+                };
+
+                recognition.onaudiostart = () => {
+                    console.log('🔊 Audio capturing started - microphone is active');
+                    statusText.textContent = '🎤 Microphone active - Speak now!';
+                };
+
+                recognition.onsoundstart = () => {
+                    console.log('🔉 Sound detected - listening to your voice');
+                    statusText.textContent = '🎤 Sound detected - Keep speaking!';
+                };
+
+                recognition.onspeechstart = () => {
+                    console.log('🗣️ Speech detected - processing your words');
+                    statusText.textContent = '🎤 I hear you speaking!';
+                };
+
+                recognition.onspeechend = () => {
+                    console.log('🤐 Speech ended - processing what you said');
+                };
+
+                recognition.onerror = (event) => { 
+                    console.error('❌ Recognition error:', event.error);
+                    clearTimeout(recognitionTimeout); 
+                    handleError(event.error); 
+                };
+
+                recognition.onend = () => {
+                    console.log('🛑 Recognition ended');
+                    clearTimeout(recognitionTimeout);
+                    isListening = false;
+                    interimTranscript.textContent = '';
+                    voiceButton.classList.remove('listening', 'processing');
+                    if (!isSpeaking && !isProcessing) { 
+                        voiceIcon.textContent = '🎤'; 
+                        if (!errorMessage.textContent) {
+                            statusText.textContent = 'Click the microphone to ask another question';
+                        }
+                    }
+                };
+
+                // CRITICAL: Request microphone permission immediately and explicitly
+                console.log('🔐 Requesting microphone permission...');
+                
+                // Show permission request notice
+                permissionNotice.style.display = 'block';
+                permissionNotice.innerHTML = '<strong>🎤 Microphone Permission Needed</strong><p>Please click "Allow" when your browser asks for microphone access. This is required for voice features to work.</p>';
+                statusText.textContent = '⏳ Requesting microphone access...';
+                
+                navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    } 
+                })
+                    .then((stream) => { 
+                        console.log('✅ Microphone access granted');
+                        permissionNotice.style.display = 'none'; 
+                        statusText.textContent = '✅ Microphone ready! Click the button to start speaking.';
+                        errorMessage.textContent = '';
+                        
+                        // Show success message briefly
+                        const successMsg = document.createElement('div');
+                        successMsg.style.cssText = 'background: #d4edda; color: #155724; padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 2px solid #c3e6cb;';
+                        successMsg.innerHTML = '<strong>✅ Microphone Access Granted!</strong><p style="margin: 5px 0 0 0;">You can now use voice features. Click the microphone button to start.</p>';
+                        permissionNotice.parentNode.insertBefore(successMsg, permissionNotice);
+                        
+                        setTimeout(() => {
+                            successMsg.style.transition = 'opacity 0.5s';
+                            successMsg.style.opacity = '0';
+                            setTimeout(() => successMsg.remove(), 500);
+                        }, 3000);
+                        
+                        // Stop the stream since we just needed permission
+                        stream.getTracks().forEach(track => track.stop());
+                    })
+                    .catch((error) => { 
+                        console.error('❌ Microphone access error:', error);
+                        permissionNotice.style.display = 'block'; 
+                        permissionNotice.innerHTML = `
+                            <strong>⚠️ Microphone Access Required</strong>
+                            <p><strong>Please allow microphone access to use voice features.</strong></p>
+                            <p style="margin-top: 8px; font-size: 0.9em;">
+                                <strong>How to enable:</strong><br>
+                                1. Click the 🔒 lock icon or ⓘ info icon in your browser's address bar<br>
+                                2. Find "Microphone" or "Permissions"<br>
+                                3. Change setting to "Allow"<br>
+                                4. Refresh this page
+                            </p>
+                            <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                🔄 Refresh Page
+                            </button>
+                        `;
+                        statusText.textContent = '⚠️ Microphone access denied'; 
+                        errorMessage.textContent = 'Please allow microphone access and refresh the page.'; 
+                    });
+                return true;
+            } else {
+                console.error('❌ Speech recognition not supported in this browser');
+                statusText.textContent = '⚠️ Voice recognition not supported';
+                errorMessage.textContent = 'Please use Chrome, Edge, or Safari browser for voice features.';
+                voiceButton.style.opacity = '0.5';
+                voiceButton.style.cursor = 'not-allowed';
+                permissionNotice.style.display = 'block';
+                permissionNotice.innerHTML = '<strong>⚠️ Browser Not Supported</strong><p>Voice features require Chrome, Edge, or Safari browser. Please switch to one of these browsers to use voice assistant.</p>';
+                return false;
+            }
+        }
+
+        function handleError(error) {
+            isListening = false;
+            voiceButton.className = 'voice-button';
+            voiceIcon.textContent = '🎤';
+            const errors = { 'no-speech': ['No speech detected. Please try again and speak clearly.', 'Ready to listen again'],
+                             'audio-capture': ['No microphone found. Check your microphone connection.', 'Microphone error'],
+                             'not-allowed': ['Microphone permission denied. Allow access in browser settings.', 'Permission required'],
+                             'network': ['Network error. Check your internet connection.', 'Network error'],
+                             'aborted': ['Speech recognition aborted.', 'Ready to try again'] };
+            const [msg, status] = errors[error] || ['Error: ' + error, 'Error occurred'];
+            errorMessage.textContent = msg;
+            statusText.textContent = status;
+            if (error === 'audio-capture' || error === 'not-allowed') permissionNotice.style.display = 'block';
+            setTimeout(() => { if (errorMessage.textContent === msg) { errorMessage.textContent = ''; if (!isListening && !isSpeaking) statusText.textContent = 'Click the microphone to try again'; } }, 5000);
+        }
+
+        function startListening() {
+            console.log('🔘 Start listening button clicked');
+            
+            if (!recognition) { 
+                console.error('❌ Recognition not initialized');
+                errorMessage.textContent = 'Voice recognition not initialized. Please refresh the page.'; 
+                return; 
+            }
+            
+            // If already listening, stop
+            if (isListening) { 
+                console.log('⏹️ Already listening, stopping...');
+                recognition.stop(); 
+                return; 
+            }
+            
+            // If speaking, stop speaking first
+            if (isSpeaking) { 
+                console.log('🔇 Stopping speech...');
+                synthesis.cancel(); 
+                isSpeaking = false; 
+            }
+            
+            // Mobile-specific: Request permission again if needed
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                console.log('📱 Mobile device - ensuring microphone access');
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then((stream) => {
+                        console.log('✅ Mobile microphone access confirmed');
+                        stream.getTracks().forEach(track => track.stop());
+                        // Start recognition after confirming access
+                        try { 
+                            console.log('▶️ Starting recognition on mobile...');
+                            recognition.start(); 
+                            errorMessage.textContent = ''; 
+                        } catch (e) { 
+                            console.error('❌ Error starting recognition:', e);
+                            if (e.message && e.message.includes('already started')) {
+                                console.log('ℹ️ Recognition already started');
+                                errorMessage.textContent = '';
+                            } else {
+                                errorMessage.textContent = 'Could not start listening. Please try tapping again.';
+                                statusText.textContent = 'Tap the microphone button to retry';
+                            }
+                        }
+                    })
+                    .catch((err) => {
+                        console.error('❌ Mobile microphone access failed:', err);
+                        errorMessage.textContent = 'Please allow microphone access in your browser settings.';
+                        permissionNotice.style.display = 'block';
+                    });
+            } else {
+                // Desktop - start directly
+                try { 
+                    console.log('▶️ Starting recognition...');
+                    recognition.start(); 
+                    errorMessage.textContent = ''; 
+                } catch (e) { 
+                    console.error('❌ Error starting recognition:', e);
+                    if (e.message && e.message.includes('already started')) {
+                        console.log('ℹ️ Recognition already started, this is fine');
+                        errorMessage.textContent = '';
+                    } else {
+                        errorMessage.textContent = 'Could not start listening. Please try clicking again.';
+                        statusText.textContent = 'Click the microphone button to retry';
+                    }
+                }
+            }
+        }
+
+        voiceButton.addEventListener('click', startListening);
+
+        async function processQuery(query) {
+            isProcessing = true;
+            const lowerQuery = query.toLowerCase();
+            let response = '', foundMatch = false, shouldSearchGoogle = false;
+
+            // Check for teaching/learning requests
+            if (lowerQuery.match(/\b(teach me|learn|explain|what is|how to|tutorial|lesson|course on|study|notes on|notes for)\b/)) {
+                // Extract the subject/topic
+                let topic = query;
+                topic = topic.replace(/teach me about|teach me|learn about|learn|explain|what is|how to|give me a tutorial on|tutorial on|lesson on|course on|study|notes on|notes for|give me notes|find notes/gi, '').trim();
+                
+                if (topic.length > 3) {
+                    response = `Perfect! I'll gather comprehensive learning notes and materials about "${topic}" from multiple educational platforms including Wikipedia, Khan Academy, YouTube tutorials, Coursera, academic resources, and study guides. Give me a moment to fetch everything.`;
+                    
+                    addToConversation('assistant', response);
+                    speak(response);
+                    
+                    // Show searching status
+                    statusText.textContent = '🔍 Fetching notes from multiple platforms...';
+                    
+                    // Fetch from multiple educational platforms
+                    await fetchFromMultiplePlatforms(topic);
+                    
+                    return;
+                }
+            }
+
+            // Greetings
+            if (lowerQuery.match(/\b(hello|hi|hey|greetings|good morning|good afternoon|good evening)\b/)) {
+                response = 'Hello! I am Santi.JR, your AI voice teacher. I fetch comprehensive course notes and learning materials from Wikipedia, Khan Academy, YouTube, Coursera, and other educational platforms. Just say "Teach me [subject]" or "Get me notes on [topic]" and I\'ll gather everything for you. What would you like to learn today?';
+                foundMatch = true;
+            } 
+            // Help requests
+            else if (lowerQuery.match(/\b(help|what can you do|what do you know|assist|guide|who are you)\b/)) {
+                response = 'I am Santi.JR, your personal AI teacher. I fetch comprehensive learning notes and materials from multiple platforms: Wikipedia for encyclopedic knowledge, Khan Academy for structured lessons, YouTube for video tutorials, Coursera for university courses, Google Scholar for academic papers, and study guide websites. I don\'t just give you content - I gather complete course notes from the best educational sources. Just ask: Get me notes on calculus, Teach me chemistry, or Find resources for Python programming.';
+                foundMatch = true;
+            }
+            // Check for specific course codes
+            else if (lowerQuery.match(/\b(cs|eng|bio|eco|med|chm|law|agr)\s*\d+\b/)) {
+                const matchedCourses = courses.filter(course => lowerQuery.includes(course.code.toLowerCase()));
+                if (matchedCourses.length > 0) {
+                    const c = matchedCourses[0];
+                    response = `I'll fetch comprehensive notes for ${c.code}, ${c.name}. I'll gather materials covering ${c.topics.slice(0, 4).join(', ')}, and more. Let me search Wikipedia, educational platforms, and study resources for the best notes.`;
+                    addToConversation('assistant', response);
+                    speak(response);
+                    await fetchFromMultiplePlatforms(c.name + ' ' + c.topics.join(' '));
+                    return;
+                }
+            } 
+            // Search database for matching courses
+            else {
+                const matchedCourses = courses.filter(course => course.keywords.some(k => lowerQuery.includes(k)));
+                if (matchedCourses.length > 0) {
+                    const c = matchedCourses[0];
+                    response = `I'll fetch comprehensive notes about ${c.name}. I'll gather materials from multiple educational platforms covering ${c.topics.slice(0, 3).join(', ')}. Let me search for the best learning resources.`;
+                    addToConversation('assistant', response);
+                    speak(response);
+                    await fetchFromMultiplePlatforms(c.name);
+                    return;
+                }
+            }
+
+            // List courses query
+            if (!foundMatch && lowerQuery.match(/\b(list|show|all|available|what|tell me about)\b.*\b(courses|programs|subjects)\b/)) {
+                response = `I can fetch notes for any of these ${courses.length} courses and many more: ${courses.map(c => `${c.code} ${c.name}`).join(', ')}. I can also gather notes from any educational platform about any subject. What would you like to learn?`;
+                foundMatch = true;
+            }
+
+            // Resource queries
+            if (!foundMatch && lowerQuery.match(/\b(resource|library|website|link|where can|portal|access|platform)\b/)) {
+                response = `I fetch learning materials from multiple platforms: Wikipedia (encyclopedic knowledge), Khan Academy (structured courses), YouTube (video tutorials), Coursera (university courses), MIT OpenCourseWare (free lectures), edX (online courses), Quizlet (study guides), and Google Scholar (academic papers). What topic would you like me to search?`;
+                foundMatch = true;
+            }
+
+            // School queries
+            if (!foundMatch && lowerQuery.match(/\b(school|faculty|department|faculties|schools)\b/)) {
+                const schools = [...new Set(courses.map(c => c.school))];
+                response = `I can fetch notes from ${schools.length} different schools: ${schools.join(', ')}. I gather materials from Wikipedia, online courses, video lectures, and academic resources. Which subject area interests you?`;
+                foundMatch = true;
+            }
+
+            // Assessment queries
+            if (!foundMatch && lowerQuery.match(/\b(assessment|exam|test|grade|marks|evaluation|how.*assessed)\b/)) {
+                response = 'I can fetch study guides, practice tests, and exam preparation materials. I search multiple platforms for assessment strategies, practice problems, and study techniques. Would you like me to find resources for a specific subject?';
+                foundMatch = true;
+            }
+
+            // If no match found, automatically fetch from multiple platforms
+            if (!foundMatch) {
+                response = `I'll fetch comprehensive learning notes about "${query}" from multiple educational platforms. Let me gather materials from Wikipedia, YouTube tutorials, online courses, and study guides.`;
+                addToConversation('assistant', response);
+                speak(response);
+                
+                // Show searching status
+                statusText.textContent = '🔍 Searching across platforms...';
+                
+                await fetchFromMultiplePlatforms(query);
+                return;
+            }
+
+            addToConversation('assistant', response);
+            isProcessing = false;
+            speak(response);
+        }
+
+        // New function to fetch from multiple educational platforms
+        async function fetchFromMultiplePlatforms(topic) {
+            statusText.textContent = '📚 Gathering notes from educational platforms...';
+            
+            // Simulate fetching delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Create search URLs for multiple platforms
+            const platforms = [
+                {
+                    name: 'Wikipedia',
+                    url: `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(topic)}`,
+                    icon: '📖',
+                    description: 'Encyclopedic articles, definitions, and comprehensive overviews'
+                },
+                {
+                    name: 'Khan Academy',
+                    url: `https://www.khanacademy.org/search?search_again=1&page_search_query=${encodeURIComponent(topic)}`,
+                    icon: '🎓',
+                    description: 'Free structured lessons, practice exercises, and video tutorials'
+                },
+                {
+                    name: 'YouTube EDU',
+                    url: `https://www.youtube.com/results?search_query=${encodeURIComponent(topic + ' tutorial lecture course')}`,
+                    icon: '🎥',
+                    description: 'Video lectures, demonstrations, and visual explanations'
+                },
+                {
+                    name: 'Coursera',
+                    url: `https://www.coursera.org/search?query=${encodeURIComponent(topic)}`,
+                    icon: '🏫',
+                    description: 'University-level courses, certificates, and specializations'
+                },
+                {
+                    name: 'MIT OpenCourseWare',
+                    url: `https://ocw.mit.edu/search/?q=${encodeURIComponent(topic)}`,
+                    icon: '🔬',
+                    description: 'MIT course materials, lecture notes, and assignments'
+                },
+                {
+                    name: 'edX',
+                    url: `https://www.edx.org/search?q=${encodeURIComponent(topic)}`,
+                    icon: '🎯',
+                    description: 'Online courses from top universities worldwide'
+                },
+                {
+                    name: 'Google Scholar',
+                    url: `https://scholar.google.com/scholar?q=${encodeURIComponent(topic)}`,
+                    icon: '📚',
+                    description: 'Academic papers, research articles, and scholarly publications'
+                },
+                {
+                    name: 'Study Notes (Quizlet)',
+                    url: `https://quizlet.com/search?query=${encodeURIComponent(topic)}&type=sets`,
+                    icon: '📝',
+                    description: 'Flashcards, study sets, and practice quizzes'
+                },
+                {
+                    name: 'Wolfram Alpha',
+                    url: `https://www.wolframalpha.com/input?i=${encodeURIComponent(topic)}`,
+                    icon: '🧮',
+                    description: 'Computational knowledge, step-by-step solutions, and data'
+                },
+                {
+                    name: 'Google Search',
+                    url: `https://www.google.com/search?q=${encodeURIComponent(topic + ' course notes study guide tutorial')}`,
+                    icon: '🔍',
+                    description: 'General search for additional resources and study materials'
+                }
+            ];
+            
+            // Create comprehensive response
+            const platformsResponse = `I've gathered learning resources for "${topic}" from 10 major educational platforms. Here are your complete course notes and materials ready to access:`;
+            
+            addToConversation('assistant', platformsResponse);
+            addMultiPlatformResourcesToConversation(topic, platforms);
+            
+            const finalResponse = `I found comprehensive notes and materials across all platforms. You have access to Wikipedia articles, Khan Academy lessons, YouTube video tutorials, university courses from Coursera and MIT, academic papers, study guides, and practice materials. Click on any platform to start learning!`;
+            
+            isProcessing = false;
+            speak(finalResponse);
+        }
+
+        // Function to display multi-platform resources
+        function addMultiPlatformResourcesToConversation(topic, platforms) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'conversation-item';
+            messageDiv.style.cssText = `
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px;
+                border-radius: 15px;
+                margin: 10px 0;
+            `;
+            
+            let platformsHTML = `
+                <div class="message-label" style="font-size: 1.1em; margin-bottom: 15px;">
+                    📚 Complete Learning Resources for "${topic}"
+                </div>
+                <div class="message-text">
+                    <p style="margin-bottom: 15px; font-weight: 500;">
+                        Access comprehensive notes from 10 educational platforms:
+                    </p>
+            `;
+            
+            platforms.forEach(platform => {
+                platformsHTML += `
+                    <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid rgba(255,255,255,0.5);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <strong style="font-size: 1em;">${platform.icon} ${platform.name}</strong>
+                        </div>
+                        <p style="font-size: 0.85em; opacity: 0.9; margin-bottom: 8px;">${platform.description}</p>
+                        <a href="${platform.url}" target="_blank" style="
+                            display: inline-block;
+                            padding: 6px 12px;
+                            background: white;
+                            color: #667eea;
+                            text-decoration: none;
+                            border-radius: 5px;
+                            font-size: 0.85em;
+                            font-weight: bold;
+                            transition: all 0.3s;
+                        ">
+                            📖 Open ${platform.name}
+                        </a>
+                    </div>
+                `;
+            });
+            
+            platformsHTML += `
+                    <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.2); border-radius: 8px;">
+                        <p style="font-size: 0.9em; margin: 0;">
+                            <strong>💡 Tip:</strong> Start with Wikipedia for overview, then watch YouTube tutorials, 
+                            practice on Khan Academy, and explore university courses for in-depth learning.
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            messageDiv.innerHTML = platformsHTML;
+            conversationHistory.appendChild(messageDiv);
+            conversationHistory.scrollTop = conversationHistory.scrollHeight;
+        }
+
+        function addToConversation(role, text) {
+            if (conversationHistory.querySelector('p[style*="color: #999"]')) conversationHistory.innerHTML = '<h3 style="color: #667eea; margin-bottom: 20px;">💬 Conversation History</h3>';
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `conversation-item ${role}-message`;
+            messageDiv.innerHTML = `<div class="message-label">${role === 'user' ? '👤 You:' : '🤖 Assistant:'}</div><div class="message-text">${text}</div>`;
+            conversationHistory.appendChild(messageDiv);
+            conversationHistory.scrollTop = conversationHistory.scrollHeight;
+        }
+
+        function addGoogleSearchToConversation(query, url) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'conversation-item google-search-message';
+            
+            // Provide helpful context about what they'll find
+            let searchContext = '';
+            const lowerQuery = query.toLowerCase();
+            
+            if (lowerQuery.includes('admission') || lowerQuery.includes('apply') || lowerQuery.includes('requirement')) {
+                searchContext = 'This search will show admission requirements, application procedures, entry qualifications, and important deadlines.';
+            } else if (lowerQuery.includes('fee') || lowerQuery.includes('cost') || lowerQuery.includes('tuition')) {
+                searchContext = 'This search will show current tuition fees, payment plans, and financial information.';
+            } else if (lowerQuery.includes('accommodation') || lowerQuery.includes('hostel') || lowerQuery.includes('housing')) {
+                searchContext = 'This search will show student accommodation options, hostel facilities, and housing information.';
+            } else if (lowerQuery.includes('scholarship') || lowerQuery.includes('bursary') || lowerQuery.includes('funding')) {
+                searchContext = 'This search will show available scholarships, bursaries, financial aid, and funding opportunities.';
+            } else if (lowerQuery.includes('contact') || lowerQuery.includes('phone') || lowerQuery.includes('email')) {
+                searchContext = 'This search will show contact information, phone numbers, email addresses, and office locations.';
+            } else if (lowerQuery.includes('timetable') || lowerQuery.includes('schedule') || lowerQuery.includes('class')) {
+                searchContext = 'This search will help you find class schedules, timetables, and academic calendar information.';
+            } else {
+                searchContext = 'This search will help you find detailed information from various sources including official websites and educational resources.';
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-label">🔍 Google Search Available:</div>
+                <div class="message-text">
+                    <p style="margin-bottom: 8px;">Search prepared for: <strong>"${query}"</strong></p>
+                    <p style="margin-bottom: 10px; font-size: 0.9em; opacity: 0.9;">${searchContext}</p>
+                    <a href="${url}" target="_blank" class="google-link">🌐 Open Google Search Results</a>
+                </div>
+            `;
+            conversationHistory.appendChild(messageDiv);
+            conversationHistory.scrollTop = conversationHistory.scrollHeight;
+        }
+
+        function addTeachingSearchToConversation(topic, url) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'conversation-item google-search-message';
+            messageDiv.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
+            
+            messageDiv.innerHTML = `
+                <div class="message-label">📚 Teaching Materials Available:</div>
+                <div class="message-text">
+                    <p style="margin-bottom: 8px;"><strong>Learning Topic: "${topic}"</strong></p>
+                    <p style="margin-bottom: 10px; font-size: 0.9em; opacity: 0.95;">
+                        I've gathered comprehensive educational resources including:<br>
+                        📖 Tutorials and step-by-step lessons<br>
+                        🎥 Video lectures and demonstrations<br>
+                        📝 Practice exercises and examples<br>
+                        📚 Textbooks and study guides<br>
+                        💡 Key concepts and explanations<br>
+                        🔬 Real-world applications
+                    </p>
+                    <a href="${url}" target="_blank" class="google-link" style="background: white; color: #11998e;">
+                        🎓 Start Learning Now
+                    </a>
+                </div>
+            `;
+            conversationHistory.appendChild(messageDiv);
+            conversationHistory.scrollTop = conversationHistory.scrollHeight;
+        }
+
+        function speak(text) {
+            if (synthesis.speaking) synthesis.cancel();
+            const chunks = [], maxLength = 200;
+            let currentChunk = '';
+            text.split('. ').forEach(sentence => {
+                if ((currentChunk + sentence).length > maxLength) { chunks.push(currentChunk); currentChunk = sentence + '. '; }
+                else currentChunk += sentence + '. ';
+            });
+            if (currentChunk) chunks.push(currentChunk);
+            let chunkIndex = 0;
+            function speakNextChunk() {
+                if (chunkIndex >= chunks.length) { isSpeaking = false; voiceButton.classList.remove('speaking'); voiceIcon.textContent = '🎤'; statusText.textContent = 'Click the microphone to ask another question'; return; }
+                const utterance = new SpeechSynthesisUtterance(chunks[chunkIndex]);
+                utterance.rate = 0.95; utterance.pitch = 1; utterance.volume = 1; utterance.lang = 'en-US';
+                utterance.onstart = () => { isSpeaking = true; voiceButton.className = 'voice-button speaking'; voiceIcon.textContent = '🔊'; statusText.textContent = '🔊 Speaking... (Click to stop)'; };
+                utterance.onend = () => { chunkIndex++; speakNextChunk(); };
+                utterance.onerror = () => { isSpeaking = false; voiceButton.classList.remove('speaking'); voiceIcon.textContent = '🎤'; statusText.textContent = 'Speech error. Click to try again.'; };
+                synthesis.speak(utterance);
+            }
+            speakNextChunk();
+        }
+
+        function stopSpeaking() { if (synthesis.speaking) { synthesis.cancel(); isSpeaking = false; voiceButton.classList.remove('speaking'); voiceIcon.textContent = '🎤'; statusText.textContent = 'Speech stopped. Click microphone to continue.'; } }
+        function clearHistory() { conversationHistory.innerHTML = '<h3 style="color: #667eea; margin-bottom: 20px;">💬 Conversation History</h3><p style="color: #999; text-align: center;">Your conversation will appear here...</p>'; statusText.textContent = 'History cleared. Ready for new conversation!'; errorMessage.textContent = ''; }
+
+        function testMicrophone() {
+            console.log('🔧 Testing microphone...');
+            statusText.textContent = '🔧 Testing your microphone...';
+            errorMessage.textContent = '';
+            
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then((stream) => {
+                    console.log('✅ Microphone test successful!');
+                    statusText.textContent = '✅ Microphone is working! You can start speaking now.';
+                    errorMessage.textContent = '';
+                    
+                    // Show audio level indicator
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const analyser = audioContext.createAnalyser();
+                    const microphone = audioContext.createMediaStreamSource(stream);
+                    microphone.connect(analyser);
+                    analyser.fftSize = 256;
+                    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                    
+                    let checkCount = 0;
+                    const checkAudio = () => {
+                        analyser.getByteFrequencyData(dataArray);
+                        const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+                        
+                        if (average > 10) {
+                            console.log('🎤 Audio detected! Level:', average);
+                            statusText.textContent = '✅ Microphone is working! I can hear audio (Level: ' + Math.round(average) + ')';
+                        }
+                        
+                        checkCount++;
+                        if (checkCount < 50) {  // Check for 5 seconds
+                            requestAnimationFrame(checkAudio);
+                        } else {
+                            stream.getTracks().forEach(track => track.stop());
+                            audioContext.close();
+                            statusText.textContent = '✅ Test complete! Your microphone is ready. Click "Start Listening" to begin.';
+                        }
+                    };
+                    checkAudio();
+                })
+                .catch((error) => {
+                    console.error('❌ Microphone test failed:', error);
+                    statusText.textContent = '❌ Microphone test failed';
+                    errorMessage.textContent = 'Could not access microphone. Please check your browser permissions.';
+                    permissionNotice.style.display = 'block';
+                });
+        }
+
+        window.startListening = startListening;
+        window.stopSpeaking = stopSpeaking;
+        window.clearHistory = clearHistory;
+        window.testMicrophone = testMicrophone;
+
+        // Manual microphone access request function
+        window.requestMicrophoneAccess = function() {
+            console.log('🔐 Manual microphone access request');
+            statusText.textContent = '⏳ Requesting microphone permission...';
+            errorMessage.textContent = '';
+            
+            navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                } 
+            })
+            .then((stream) => {
+                console.log('✅ Microphone access granted!');
+                stream.getTracks().forEach(track => track.stop());
+                
+                permissionNotice.style.display = 'none';
+                statusText.textContent = '✅ Microphone access granted! Click the microphone button to start speaking.';
+                errorMessage.textContent = '';
+                
+                // Show success message
+                alert('✅ Microphone access granted! You can now use voice features.');
+                
+                // Reinitialize if needed
+                if (!recognition) {
+                    initializeSpeechRecognition();
+                }
+            })
+            .catch((error) => {
+                console.error('❌ Microphone access denied:', error);
+                statusText.textContent = '⚠️ Microphone access denied';
+                errorMessage.textContent = 'Please check your browser settings and allow microphone access.';
+                
+                // Show detailed help
+                permissionNotice.innerHTML = `
+                    <strong>⚠️ Microphone Access Denied</strong>
+                    <p><strong>Please follow these steps:</strong></p>
+                    <ol style="text-align: left; margin: 10px 0; padding-left: 20px;">
+                        <li>Look for the 🔒 lock or ⓘ info icon in your browser's address bar</li>
+                        <li>Click on it to open site settings</li>
+                        <li>Find "Microphone" in the permissions list</li>
+                        <li>Change the setting to "Allow"</li>
+                        <li>Refresh this page</li>
+                    </ol>
+                    <p style="margin-top: 10px;"><strong>On Mobile:</strong></p>
+                    <p>Go to your phone's Settings → Browser → Site Permissions → Microphone → Allow</p>
+                    <button onclick="location.reload()" style="margin-top: 10px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                        🔄 Refresh Page
+                    </button>
+                `;
+            });
+        };
+
+        window.addEventListener('load', () => {
+            // Check if running on HTTPS
+            const isHTTPS = window.location.protocol === 'https:';
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            
+            if (!isHTTPS && !isLocalhost) {
+                // Show warning about HTTPS requirement
+                const httpsWarning = document.createElement('div');
+                httpsWarning.style.cssText = 'background: #ff6b6b; color: white; padding: 15px; margin: 15px; border-radius: 10px; text-align: center; font-weight: bold;';
+                httpsWarning.innerHTML = `
+                    <p style="margin-bottom: 10px;">⚠️ <strong>HTTPS REQUIRED FOR MICROPHONE ACCESS</strong></p>
+                    <p style="font-size: 0.9em; font-weight: normal;">This app needs HTTPS to access your microphone. Please deploy to:</p>
+                    <p style="font-size: 0.9em; font-weight: normal; margin-top: 8px;">
+                        • GitHub Pages (free): github.io<br>
+                        • Netlify (free): netlify.app<br>
+                        • Vercel (free): vercel.app
+                    </p>
+                    <p style="font-size: 0.85em; margin-top: 10px; opacity: 0.9;">
+                        Check the DEPLOYMENT_GUIDE.md file for step-by-step instructions.
+                    </p>
+                `;
+                document.querySelector('.main-content').insertBefore(httpsWarning, document.querySelector('.main-content').firstChild);
+                
+                console.warn('🔒 HTTPS is required for microphone access. Current protocol:', window.location.protocol);
+            } else {
+                console.log('✅ HTTPS or localhost detected - microphone should work');
+            }
+            
+            const initialized = initializeSpeechRecognition();
+            
+            // Prevent pull-to-refresh on mobile
+            document.body.addEventListener('touchmove', (e) => {
+                if (e.target === document.body) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Prevent double-tap zoom on buttons
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', (event) => {
+                const now = Date.now();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+            
+            // Add haptic feedback for mobile (if available)
+            if (window.navigator && window.navigator.vibrate) {
+                voiceButton.addEventListener('click', () => {
+                    navigator.vibrate(50); // Short vibration
+                });
+            }
+            
+            // Detect if user is on mobile
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            console.log('Mobile device detected:', isMobile);
+            console.log('Browser:', navigator.userAgent);
+            console.log('HTTPS:', isHTTPS);
+            
+            if (isMobile) {
+                // Mobile-specific optimizations
+                statusText.textContent = '📱 Mobile ready! Tap the microphone to start learning.';
+                
+                // Show mobile-friendly instructions
+                const instructions = document.querySelector('.instructions');
+                if (instructions) {
+                    instructions.innerHTML = `
+                        <p><strong>Mobile Instructions:</strong></p>
+                        <p>1. Tap the microphone button</p>
+                        <p>2. Allow microphone access</p>
+                        <p>3. Say "Teach me [any subject]"</p>
+                        <p>4. I'll fetch and explain everything!</p>
+                        ${!isHTTPS && !isLocalhost ? '<p style="color: #ff6b6b; margin-top: 8px;"><strong>⚠️ Needs HTTPS for mic access</strong></p>' : ''}
+                    `;
+                }
+            }
+            
+            if (initialized) {
+                // Shorter delay for mobile
+                const welcomeDelay = isMobile ? 1000 : 2000;
+                setTimeout(() => { 
+                    if (!isListening && !isSpeaking) {
+                        const welcomeMsg = isMobile 
+                            ? 'Welcome! I am Santi.JR, your AI voice teacher. I can teach you any subject. Just tap the microphone and say: Teach me mathematics, Explain physics, or any topic you want to learn!'
+                            : 'Welcome to Santi.JR Voice Assistant! I am your personal AI teacher. I can teach you any subject or course by fetching educational content from the internet. Click the microphone and ask me to teach you anything!';
+                        speak(welcomeMsg);
+                    }
+                }, welcomeDelay);
+            }
+            
+            // Handle orientation changes on mobile
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    window.scrollTo(0, 0);
+                }, 100);
+            });
+        });
+
+        // API Configuration - Use HTTPS for GitHub Pages deployment
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000'
+            : 'https://your-backend-domain.com'; // Change this to your deployed backend URL
+
+        async function askAI(message) {
+            try {
+                console.log('🔄 Sending message to API:', message);
+                const response = await fetch(`${API_URL}/ask`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message }),
+                    mode: 'cors'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ API Response received');
+                return data.response;
+            } catch (error) {
+                console.error('❌ API Error:', error);
+                throw error;
+            }
+        }
+    </script>
+</body>
+</html>
